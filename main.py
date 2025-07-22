@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,Request, HTTPException
 from database import Base, engine
 from routers import  students, courses, grades, attendance, myinfo,resources, continual_evaluation, annoncemant
 from routers import faculty_router
@@ -49,4 +49,13 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 def serve_signup():
     with open(os.path.join("static", "signup.html"), "r") as f:
         return f.read()
+    
+@app.middleware("http")
+async def secure_with_password(request: Request, call_next):
+    if request.url.path.startswith("/docs"):
+        password = request.query_params.get("pass")
+        if password != "yourpassword":
+            raise HTTPException(status_code=403, detail="Unauthorized")
+    return await call_next(request)
+
 

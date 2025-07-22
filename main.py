@@ -54,7 +54,7 @@ def serve_signup():
 async def secure_with_password(request: Request, call_next):
     if request.url.path.startswith("/docs"):
         password = request.query_params.get("pass")
-        if password != "yourpassword":
+        if password != "Malavika123":
             raise HTTPException(status_code=403, detail="Unauthorized")
     return await call_next(request)
 

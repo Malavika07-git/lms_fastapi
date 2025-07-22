@@ -255,6 +255,9 @@ class FacultyOut(BaseModel):
     user_id: int
     department_id: int
 
+class FacultyUpdate(BaseModel):
+    department_id: Optional[int] = None    
+
     class Config:
         orm_mode = True  # Needed in Pydantic v2
  

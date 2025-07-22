@@ -64,10 +64,15 @@ class StudentBase(BaseModel):
 
 class StudentCreate(StudentBase):
     user_id: int
+    department_id: int
+    class_id: int
 
 class StudentOut(StudentBase):
     id: int
-    user: UserOut
+    user_id: int
+    department_id: int
+    class_id: int
+
 
     class Config:
         orm_mode = True

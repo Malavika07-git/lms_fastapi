@@ -15,27 +15,52 @@ def get_db():
         db.close()
 
 @router.post("/", response_model=schemas.StudentOut)
-def create_student(student: schemas.StudentCreate, db: Session = Depends(get_db)):
-    db_student = models.Student(**student.dict())
-    db.add(db_student)
+def create_student(data: schemas.StudentCreate, db: Session = Depends(get_db)):
+    # Check user exists
+    user = db.query(User).filter(User.id == data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    student = Student(**data.dict())
+    db.add(student)
     db.commit()
-    db.refresh(db_student)
-    return db_student
+    db.refresh(student)
+    return student
 
-@router.get("/", response_model=List[schemas.StudentOut])
-def get_students(
-    class_id: Optional[int] = Query(None),
-    department_id: Optional[int] = Query(None),
-    skip: int = 0,
-    limit: int = 10,
-    db: Session = Depends(get_db)
-):
-    query = db.query(models.Student)
+# Get all students
+@router.get("/", response_model=list[schemas.StudentOut])
+def get_all_students(db: Session = Depends(get_db)):
+    return db.query(Student).all()
 
-    if class_id is not None:
-        query = query.filter(models.Student.class_id == class_id)
+# Get single student
+@router.get("/{student_id}", response_model=schemas.StudentOut)
+def get_student(student_id: int, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return student
 
-    if department_id is not None:
-        query = query.filter(models.Student.department_id == department_id)
+# Update student
+@router.put("/{student_id}", response_model=schemas.StudentOut)
+def update_student(student_id: int, data: schemas.StudentCreate, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
 
-    return query.offset(skip).limit(limit).all()
+    for key, value in data.dict().items():
+        setattr(student, key, value)
+    
+    db.commit()
+    db.refresh(student)
+    return student
+
+# Delete student
+@router.delete("/{student_id}")
+def delete_student(student_id: int, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    db.delete(student)
+    db.commit()
+    return {"message": "Student deleted successfully"}
